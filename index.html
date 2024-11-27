@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отслеживание грузов</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .status-awaiting { background-color: yellow; }
+        .status-in-transit { background-color: blue; color: white; }
+        .status-delivered { background-color: green; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Отслеживание грузов</h1>
+        
+        <form id="cargoForm" class="mb-4">
+            <div class="form-group">
+                <label for="cargoName">Название груза</label>
+                <input type="text" class="form-control" id="cargoName" required>
+            </div>
+            <div class="form-group">
+                <label for="origin">Пункт отправления</label>
+                <select class="form-control" id="origin" required>
+                    <option value="">Выберите город</option>
+                    <option value="Москва">Москва</option>
+                    <option value="Санкт-Петербург">Санкт-Петербург</option>
+                    <option value="Казань">Казань</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination">Пункт назначения</label>
+                <select class="form-control" id="destination" required>
+                    <option value="">Выберите город</option>
+                    <option value="Казань">Казань</option>
+                    <option value="Екатеринбург">Екатеринбург</option>
+                    <option value="Москва">Москва</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="departureDate">Дата отправления</label>
+                <input type="date" class="form-control" id="departureDate" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Добавить груз</button>
+        </form>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Номер груза</th>
+                    <th>Название груза</th>
+                    <th>Статус</th>
+                    <th>Пункт отправления</th>
+                    <th>Пункт назначения</th>
+                    <th>Дата отправления</th>
+                    <th>Изменить статус</th>
+                </tr>
+            </thead>
+            <tbody id="cargoTableBody">
+              
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const cargoList = [];
+        let cargoId = 1;
+
+        document.getElementById('cargoForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('cargoName').value;
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const departureDate = document.getElementById('departureDate').value;
+
+            const newCargo = {
+                id: `CARGO00${cargoId++}`,
+                name: name,
+                status: 'Ожидает отправки',
+                origin: origin,
+                destination: destination,
+                departureDate: departureDate
+            };
+
+            cargoList.push(newCargo);
+            updateCargoTable();
+            this.reset();
+        });
+
+        function updateCargoTable() {
+            const tableBody = document.getElementById('cargoTableBody');
+            tableBody.innerHTML = '';
+
+            cargoList.forEach(cargo => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${cargo.id}</td>
+                    <td>${cargo.name}</td>
+                    <td class="${getStatusClass(cargo.status)}">${cargo.status}</td>
+                    <td>${cargo.origin}</td>
+                    <td>${cargo.destination}</td>
+                    <td>${cargo.departureDate}</td>
+                    <td>
+                        <select onchange="changeStatus('${cargo.id}', this.value)">
+                            <option value="Ожидает отправки">Ожидает отправки</option>
+                            <option value="В пути">В пути</option>
+                            <option value="Доставлен">Доставлен</option>
+                        </select>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function getStatusClass(status) {
+            switch (status) {
+                case 'Ожидает отправки':
+                    return 'status-awaiting';
+                case 'В пути':
+                    return 'status-in-transit';
+                case 'Доставлен':
+                    return 'status-delivered';
+                default:
+                    return '';
+            }
+        }
+
+        function changeStatus(id, newStatus) {
+            const cargo = cargoList.find(c => c.id === id);
+            if (newStatus === 'Доставлен' && new Date(cargo.departureDate) > new Date()) {
+                alert('Ошибка: Нельзя установить статус "Доставлен" для груза с будущей датой отправления.');
+                return;
+            }
+            cargo.status = newStatus;
+            updateCargoTable();
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
